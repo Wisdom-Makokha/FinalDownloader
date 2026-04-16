@@ -127,18 +127,8 @@ namespace FinalDownloader.Display.Screens.Download
 
             if (_argumentSettings.Progress)
             {
-                return new NavigationResult
-                {
-                    NextScreenKey = ScreenNames.DownloadProgressScreen,
-                    ScreenAction = NavigationAction.Replace,
-                    Data = new ProgressScreenData
-                    {
-                        ArgumentSettings = _argumentSettings,
-                        CancellationToken = cts.Token,
-                        DownloadItems = downloadList
-                    },
-                    MenuScreenCustomizationData = null
-                };
+                await _downloadService.ProcessDownloadQueueWithProgress(_argumentSettings, cts.Token);
+
             }
             else
             {
@@ -148,6 +138,11 @@ namespace FinalDownloader.Display.Screens.Download
                     await _downloadService.ProcessDownloadQueue(_argumentSettings, cts.Token);
                 });
             }
+
+            await AnsiConsole.PromptAsync(
+                new TextPrompt<string>("[grey]Press [[Enter]] to go back...[/]")
+                .AllowEmpty()
+            );
 
             return new NavigationResult
             {

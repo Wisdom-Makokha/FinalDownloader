@@ -16,7 +16,6 @@ namespace FinalDownloader.Constants
         public static string DeleteCategoryScreen => "DeleteCategoryScreen";
         public static string SetDefaultCategoryScreen => "SetDefaultCategoryScreen";
         public static string DownloadScreen => "DownloadScreen";
-        public static string DownloadProgressScreen => "DownloadProgressScreen";
         public static string UpdateScreen => "UpdateScreen";
         public static string DownloadSettingsDetailsScreen => "DownloadSettingsDetailsScreen";
         public static string EditDownloadSettingsScreen => "EditDownloadSettingsScreen";

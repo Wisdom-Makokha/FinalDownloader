@@ -15,8 +15,8 @@ namespace FinalDownloader.Services.Download
     {
         bool ProcessingComplete { get; }
         ConcurrentDictionary<string, List<string>> DownloadErrors { get; }
-        ConcurrentDictionary<string, DownloadProgress> DownloadProgress { get; }
         Task ProcessDownloadQueue(ArgumentSettings settings, CancellationToken cancellationToken = default);
+        Task ProcessDownloadQueueWithProgress(ArgumentSettings settings, CancellationToken cancellationToken = default);
         void EnqueueDownload(MediaMetadataBase metadata);
         void EnqueueDownloads(IEnumerable<MediaMetadataBase> metadataList);
     }

@@ -27,6 +27,7 @@ using FinalDownloader.Services.MetadataRetrieval;
 using FinalDownloader.Services.FileHandling;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using FinalDownloader.Services.Progress;
 
 namespace FinalDownloader
 {
@@ -36,7 +37,7 @@ namespace FinalDownloader
         {
             if (OperatingSystem.IsWindows())
             { 
-                Console.SetWindowSize(148, 35);
+                Console.SetWindowSize(128, 29);
                 //Console.
             }
             var services = new ServiceCollection();
@@ -76,13 +77,13 @@ namespace FinalDownloader
             services.AddTransient<IMetadataService, MetadataService>();
             services.AddTransient<IFileHandlingService, FileHandlingService>();
             services.AddTransient<IDownloadService, DownloadService>();
+            services.AddTransient<IProgressService, ProgressService>();
             services.AddTransient<DBInitializer>();
 
             // add transient screens
             services.AddTransient<WelcomeScreen>();
             services.AddTransient<ExitScreen>();
             services.AddTransient<DownloadScreen>();
-            services.AddTransient<DownloadProgressScreen>();
             services.AddTransient<UpdateScreen>();
             services.AddTransient<CategoryDetailsScreen>();
             services.AddTransient<AddCategoryScreen>();
@@ -106,7 +107,6 @@ namespace FinalDownloader
             registry.RegisterScreen(ScreenNames.WelcomeScreen, serviceProvider.GetRequiredService<WelcomeScreen>);
             registry.RegisterScreen(ScreenNames.ExitScreen, serviceProvider.GetRequiredService<ExitScreen>);
             registry.RegisterScreen(ScreenNames.DownloadScreen, serviceProvider.GetRequiredService<DownloadScreen>);
-            registry.RegisterScreen(ScreenNames.DownloadProgressScreen, serviceProvider.GetRequiredService<DownloadProgressScreen>);
             registry.RegisterScreen(ScreenNames.UpdateScreen, serviceProvider.GetRequiredKeyedService<UpdateScreen>);
             registry.RegisterScreen(ScreenNames.CategoryDetailsScreen, serviceProvider.GetRequiredService<CategoryDetailsScreen>);
             registry.RegisterScreen(ScreenNames.AddCategoryScreen, serviceProvider.GetRequiredService<AddCategoryScreen>);
