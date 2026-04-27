@@ -21,5 +21,6 @@ namespace FinalDownloader.Constants
         public static string EditDownloadSettingsScreen => "EditDownloadSettingsScreen";
         public static string ArgumentSettingsDetailsScreen => "ArgumentSettingsDetailsScreen";
         public static string EditArgumentSettingsScreen => "EditArgumentSettingsScreen";
+        public static string RecordsMergeScreen => "RecordsMergeScreen";
     }
 }

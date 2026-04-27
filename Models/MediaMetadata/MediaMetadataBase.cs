@@ -20,28 +20,58 @@ namespace FinalDownloader.Models.MediaMetadata
         public string? Artist { get; set; }
         public string? Artists { get; set; }
         public string? Genre { get; set; }
-        public string? Genres { get; set; }
         public string Uploader { get; set; }
         public string? UploadDate { get; set; }
         public DateTime DownloadDate { get; set; }
+        public long FileSize { get; set; }
+        public string FileSizeView => FormatFileSize(FileSize);
         public DateOnly? UploadDateView => UploadDate != null ? DateOnly.ParseExact(UploadDate, "yyyyMMdd") : null;
-        public double Duration { get; set; }
+        public int Duration { get; set; }
         public TimeSpan DurationView => TimeSpan.FromSeconds(Duration);
         public string MediaFormat { get; set; }
-        public int CategoryId { get; set; }
         public DateTime DateCreated { get; set; } = DateTime.Now;
         public DateTime DateUpdated { get; set; } = DateTime.Now;
+        public int CategoryId { get; set; }
         public Category Category { get; set; }
         public Guid? MediaContainerBaseId { get; set; }
         public MediaContainerBase? MediaContainerBase { get; set; }
 
-        private string CreateSafeProgressTitle()
+        private string CreateSafeProgressTitle(int? specifiedLength = null)
         {
-            var consoleLengthLimit = (Console.WindowWidth / 3) - 7; // Adjust this limit as needed
-            string safeTitle = Title.Length > consoleLengthLimit ? Title.Substring(0, consoleLengthLimit) + ".. " : (Title + ".. ").PadRight(consoleLengthLimit);
+            // Determine the target length
+            int targetLength = specifiedLength ?? ((Console.WindowWidth / 3) - 7);
+
+            string baseText = Title + "... ";
+            string safeTitle;
+
+            if (baseText.Length > targetLength)
+            {
+                int maxTitleLength = targetLength - 4; // Reserve space for "... "
+                safeTitle = Title.Substring(0, maxTitleLength) + "... ";
+            }
+            else
+            {
+                // Pad with spaces to reach target length
+                safeTitle = baseText.PadRight(targetLength);
+            }
+
             safeTitle = safeTitle.Replace('[', '(').Replace(']', ')');
 
-            return $"{(DownloadIndex == null ? string.Empty : "#" + DownloadIndex + " ")}{safeTitle}";
+            string prefix = DownloadIndex == null ? string.Empty : $"#{DownloadIndex} ";
+            return $"{prefix}{safeTitle}";
+        }
+
+        private string FormatFileSize(long fileSize)
+        {
+            string[] sizes = { "B", "KB", "MB", "GB", "TB" };
+            double len = fileSize;
+            int order = 0;
+            while (len >= 1024 && order < sizes.Length - 1)
+            {
+                order++;
+                len /= 1024;
+            }
+            return $"{len:0.##} {sizes[order]}";
         }
 
         public override bool Equals(object? obj)

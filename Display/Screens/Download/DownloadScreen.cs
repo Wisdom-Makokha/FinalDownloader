@@ -53,6 +53,7 @@ namespace FinalDownloader.Display.Screens.Download
 
             // Get default category and list of category names
             var (category, categories) = await GetCategoryAndListAsync(cts.Token);
+            categories.Add("##Create New Category##");
 
             if (category == null)
             {
@@ -61,6 +62,17 @@ namespace FinalDownloader.Display.Screens.Download
                 if (categories.Count > 0)
                 {
                     var selectedCategoryName = await PromptForCategorySelectionAsync(categories);
+                    
+                    if (selectedCategoryName == "##Create New Category##")
+                    {
+                        return new NavigationResult
+                        {
+                            ScreenAction = NavigationAction.Replace,
+                            NextScreenKey = ScreenNames.AddCategoryScreen,
+                            Data = null
+                        };
+                    }
+
                     category = await _categoryRepository.GetByNameAsync(selectedCategoryName);
 
                     await _categoryRepository.SetDefaultCategoryAsync(category!.Name, cts.Token);
@@ -97,7 +109,17 @@ namespace FinalDownloader.Display.Screens.Download
                     }
 
                     var selectedCategoryName = await PromptForCategorySelectionAsync(categories);
-                    category = await _categoryRepository.GetByNameAsync(selectedCategoryName);
+                    if (selectedCategoryName == "##Create New Category##")
+                    {
+                        return new NavigationResult
+                        {
+                            ScreenAction = NavigationAction.Replace,
+                            NextScreenKey = ScreenNames.AddCategoryScreen,
+                            Data = null
+                        };
+                    }
+                    else
+                        category = await _categoryRepository.GetByNameAsync(selectedCategoryName);
                 }
             }
 
@@ -121,14 +143,19 @@ namespace FinalDownloader.Display.Screens.Download
                 downloadList.Add(await HandleSingleMediaAsync(downloadData, cts.Token));
             }
 
+            await AnsiConsole.PromptAsync(
+                new TextPrompt<string>("[grey]Press [[Enter]] to go back...[/]")
+                .AllowEmpty()
+            );
+
+            Console.Clear();
             Console.Write("\n");
-            AnsiConsole.MarkupLine(downloadData.ToString());
+            DownloadData.DisplayDownloadData(downloadData);
             Console.Write("\n");
 
             if (_argumentSettings.Progress)
             {
                 await _downloadService.ProcessDownloadQueueWithProgress(_argumentSettings, cts.Token);
-
             }
             else
             {

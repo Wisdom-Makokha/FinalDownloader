@@ -26,7 +26,7 @@ namespace FinalDownloader.Models.MediaMetadata
         [JsonPropertyName("playlist_index")]
         public int? Playlist_Index { get; set; }
         [JsonPropertyName("duration")]
-        public double? Duration { get; set; } // Duration in seconds
+        public int? Duration { get; set; } // Duration in seconds
         [JsonPropertyName("playlist_count")]
         public int? Playlist_Count { get; set; }
         [JsonPropertyName("view_count")]

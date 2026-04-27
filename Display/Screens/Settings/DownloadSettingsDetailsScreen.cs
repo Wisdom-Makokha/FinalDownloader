@@ -45,31 +45,93 @@ namespace FinalDownloader.Display.Screens.Settings
             };
         }
 
-        public static void DisplayDetails(DownloadSettings downloadSettings)
+        public static void DisplayDetails(DownloadSettings settings)
         {
-            AnsiConsole.MarkupLine($"[bold]Download Path:[/] [cyan]{downloadSettings.TemporaryDirectory}[/]");
-            AnsiConsole.MarkupLine($"[bold]Max Concurrent Downloads:[/] [cyan]{downloadSettings.MaxConcurrentDownloads}[/]");
-            AnsiConsole.MarkupLine($"[bold]Delete temporary files:[/] [cyan]{downloadSettings.DeleteTempFiles}[/]");
-            AnsiConsole.Markup("[bold]Supported video formats:\n -[/]");
-            foreach (var format in downloadSettings.SupportedVideoFormats)
+            var rows = new List<string>();
+
+            // Temporary Directory
+            rows.Add($"[bold cyan]Temporary Directory:[/] [dim]{EscapeMarkup(settings.TemporaryDirectory)}[/]");
+            rows.Add($"[bold cyan]Delete Temp Files:[/] {(settings.DeleteTempFiles ? "[green]✓ Yes (Clean up after completion)[/]" : "[yellow]⚠️ No (Keep temp files)[/]")}");
+            rows.Add($"[bold cyan]Max Concurrent Downloads:[/] {(settings.MaxConcurrentDownloads > 1 ? $"[yellow]{settings.MaxConcurrentDownloads}[/]" : $"[grey]{settings.MaxConcurrentDownloads}[/]")}");
+
+            // Supported Video Formats
+            rows.Add("");
+            rows.Add("[bold underline]Supported Video Formats:[/]");
+            if (settings.SupportedVideoFormats?.Any() == true)
             {
-                AnsiConsole.Markup($"[cyan]{format}, [/]");
+                var videoFormats = string.Join("  ", settings.SupportedVideoFormats.Select(f => $"[blue]{EscapeMarkup(f)}[/]"));
+                rows.Add($"  {videoFormats}");
             }
-            AnsiConsole.Markup("[bold]\nSupported audio formats:\n - [/]");
-            foreach (var format in downloadSettings.SupportedAudioFormats)
+            else
             {
-                AnsiConsole.Markup($"[cyan]{format}, [/]");
+                rows.Add("  [grey]None specified[/]");
             }
-            AnsiConsole.Markup("[bold]\nSupported resolutions:\n - [/]");
-            foreach (var resolution in downloadSettings.SupportedResolutions)
+
+            // Supported Audio Formats
+            rows.Add("");
+            rows.Add("[bold underline]Supported Audio Formats:[/]");
+            if (settings.SupportedAudioFormats?.Any() == true)
             {
-                AnsiConsole.Markup($"[cyan]{resolution}, [/]");
+                var audioFormats = string.Join("  ", settings.SupportedAudioFormats.Select(f => $"[green]{EscapeMarkup(f)}[/]"));
+                rows.Add($"  {audioFormats}");
             }
-            AnsiConsole.Markup("[bold]\nSupported subtitle formats:\n - [/]");
-            foreach (var subtitle in downloadSettings.SupportedSubtitleFormats)
+            else
             {
-                AnsiConsole.Markup($"[cyan]{subtitle}[/]");
+                rows.Add("  [grey]None specified[/]");
             }
+
+            // Supported Resolutions
+            rows.Add("");
+            rows.Add("[bold underline]Supported Resolutions:[/]");
+            if (settings.SupportedResolutions?.Any() == true)
+            {
+                var resolutions = string.Join("  ", settings.SupportedResolutions.Select(r => $"[yellow]{EscapeMarkup(r)}[/]"));
+                rows.Add($"  {resolutions}");
+            }
+            else
+            {
+                rows.Add("  [grey]None specified[/]");
+            }
+
+            // Supported Subtitle Formats
+            rows.Add("");
+            rows.Add("[bold underline]Supported Subtitle Formats:[/]");
+            if (settings.SupportedSubtitleFormats?.Any() == true)
+            {
+                var subtitleFormats = string.Join("  ", settings.SupportedSubtitleFormats.Select(f => $"[magenta]{EscapeMarkup(f)}[/]"));
+                rows.Add($"  {subtitleFormats}");
+            }
+            else
+            {
+                rows.Add("  [grey]None specified[/]");
+            }
+
+            // Summary statistics
+            rows.Add("");
+            rows.Add("[bold cyan]Total Supported Formats:[/] " +
+                $"[blue]{settings.SupportedVideoFormats?.Count ?? 0} video[/] • " +
+                $"[green]{settings.SupportedAudioFormats?.Count ?? 0} audio[/] • " +
+                $"[magenta]{settings.SupportedSubtitleFormats?.Count ?? 0} subtitle[/]");
+
+            var content = string.Join("\n", rows);
+
+            var panel = new Panel(content)
+            {
+                Header = new PanelHeader("[bold yellow]🔧 Download Settings[/]"),
+                Border = BoxBorder.Heavy,
+                BorderStyle = new Style(foreground: Color.Cyan1),
+                Padding = new Padding(2, 1, 2, 1),
+                Expand = true
+            };
+
+            AnsiConsole.Write(panel);
+            AnsiConsole.WriteLine();
+        }
+
+        // Helper method to escape markup characters
+        static string EscapeMarkup(string text)
+        {
+            return text?.Replace("[", "[[").Replace("]", "]]") ?? string.Empty;
         }
     }
 }

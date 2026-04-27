@@ -12,5 +12,6 @@ namespace FinalDownloader.Services.MetadataRetrieval
     {
         Task<MediaContainerBase?> GetContainerMetadataAsync(DownloadData downloadData, CancellationToken cancellationToken = default);
         Task<MediaMetadataBase?> GetMetadataAsync(DownloadData downloadData, CancellationToken cancellationToken = default);
+        MediaMetadataBase UpdateMetadataWithDownloadInfo(MediaMetadataBase metadata, string downloadPath);
     }
 }

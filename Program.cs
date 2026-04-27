@@ -28,6 +28,7 @@ using FinalDownloader.Services.FileHandling;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using FinalDownloader.Services.Progress;
+using FinalDownloader.RecordsMerge;
 
 namespace FinalDownloader
 {
@@ -93,6 +94,7 @@ namespace FinalDownloader
             services.AddTransient<EditDownloadSettingsScreen>();
             services.AddTransient<ArgumentSettingsDetailsScreen>();
             services.AddTransient<EditArgumentSettingsScreen>();
+            services.AddTransient<RecordsMergeScreen>();
 
             var serviceProvider = services.BuildServiceProvider();
             var navigationService = serviceProvider.GetRequiredService<INavigationService>();
@@ -116,6 +118,7 @@ namespace FinalDownloader
             registry.RegisterScreen(ScreenNames.EditDownloadSettingsScreen, serviceProvider.GetRequiredService<EditDownloadSettingsScreen>);
             registry.RegisterScreen(ScreenNames.ArgumentSettingsDetailsScreen, serviceProvider.GetRequiredService<ArgumentSettingsDetailsScreen>);
             registry.RegisterScreen(ScreenNames.EditArgumentSettingsScreen, serviceProvider.GetRequiredService<EditArgumentSettingsScreen>);
+            registry.RegisterScreen(ScreenNames.RecordsMergeScreen, serviceProvider.GetRequiredService<RecordsMergeScreen>);
 
             // register menus with the navigation service
             registry.RegisterScreen(MenuNames.MainMenu, menuFactory.CreateMainMenu);

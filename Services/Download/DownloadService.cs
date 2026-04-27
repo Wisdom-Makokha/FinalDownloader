@@ -8,6 +8,7 @@ using FinalDownloader.Models.Settings;
 using FinalDownloader.Services.Arguments;
 using FinalDownloader.Services.Configuration;
 using FinalDownloader.Services.FileHandling;
+using FinalDownloader.Services.MetadataRetrieval;
 using FinalDownloader.Services.Parser;
 using FinalDownloader.Services.Process;
 using FinalDownloader.Services.Progress;
@@ -34,6 +35,7 @@ namespace FinalDownloader.Services.Download
         private readonly IArgumentService _argumentService;
         private readonly IParserService _parserService;
         private readonly IFileHandlingService _fileHandlingService;
+        private readonly IMetadataService _metadataService;
         private readonly DownloadSettings _downloadSettings;
         private readonly IProgressService _progressService;
 
@@ -49,6 +51,7 @@ namespace FinalDownloader.Services.Download
             IFileHandlingService fileHandlingService,
             IProgressService progressService,
             IConfigurationService configurationService,
+            IMetadataService metadataService,
             IMediaMetadataBaseRepository mediaMetadataBaseRepository)
         {
             _dbContextFactory = dbContextFactory;
@@ -57,6 +60,7 @@ namespace FinalDownloader.Services.Download
             _parserService = parserService;
             _fileHandlingService = fileHandlingService;
             _progressService = progressService;
+            _metadataService = metadataService;
 
             _downloadQueue = new ConcurrentQueue<MediaMetadataBase>();
             DownloadErrors = new ConcurrentDictionary<string, List<string>> { };
@@ -96,7 +100,7 @@ namespace FinalDownloader.Services.Download
         }
         #endregion
 
-        #region Processing
+        #region Queue Processing
         public async Task ProcessDownloadQueue(ArgumentSettings argumentSettings, CancellationToken cancellationToken = default)
         {
             var options = new ParallelOptions
@@ -148,7 +152,7 @@ namespace FinalDownloader.Services.Download
 
         public async Task ProcessDownloadQueueWithProgress(ArgumentSettings argumentSettings, CancellationToken cancellationToken = default)
         {
-            var throttler = new SemaphoreSlim(_downloadSettings.MaxConcurrentDownloads - 2, _downloadSettings.MaxConcurrentDownloads + 2);
+            var throttler = new SemaphoreSlim(_downloadSettings.MaxConcurrentDownloads, _downloadSettings.MaxConcurrentDownloads + 2);
             int completedCount = 0;
 
             ProcessingComplete = false;
@@ -160,7 +164,7 @@ namespace FinalDownloader.Services.Download
                     var tasks = new List<Task>();
                     ProgressTask? overallTask = null;
 
-                    if(_downloadQueue.Count > 1)
+                    if (_downloadQueue.Count > 1)
                     {
                         overallTask = context.AddTask("Overall Progress", maxValue: _downloadQueue.Count());
                         overallTask.Value = 0;
@@ -183,7 +187,7 @@ namespace FinalDownloader.Services.Download
                             {
                                 throttler.Release();
                                 completedCount++;
-                                
+
                                 if (overallTask != null)
                                 {
                                     overallTask.Value = completedCount;
@@ -244,6 +248,16 @@ namespace FinalDownloader.Services.Download
                     throw new InvalidOperationException($"Download process exited with code {processResult.ExitCode} for URL: {metadata.Url}");
                 }
 
+                try
+                {
+                    metadata = _metadataService.UpdateMetadataWithDownloadInfo(metadata, downloadPath);
+                }
+                catch
+                (Exception ex)
+                {
+                    errorList.Add($"Metadata Update Error - An error occurred while updating metadata for URL: {metadata.Url} - Message {ex.Message}");
+                }
+
                 await new MediaMetadataRepository(_dbContextFactory.CreateDbContext()).AddAsync(metadata, cancellationToken);
                 DownloadErrors.TryAdd(metadata.Id, errorList);
 
@@ -262,13 +276,6 @@ namespace FinalDownloader.Services.Download
         {
             var errorList = new List<string>();
 
-            var currentProgress = new DownloadProgress
-            {
-                IsCompleted = false,
-                Speed = string.Empty,
-                Status = "Downloading"
-            };
-
             _progressService.CreateTask(metadata.ProgressTitle);
 
             var downloadPath = Path.Combine(_downloadSettings.TemporaryDirectory, metadata.Id);
@@ -283,7 +290,7 @@ namespace FinalDownloader.Services.Download
                 {
                     if (!string.IsNullOrEmpty(line))
                     {
-                        currentProgress = _parserService.ParseProgressString(line);
+                        var currentProgress = _parserService.ParseProgressString(line);
                         if (currentProgress != null)
                         {
                             _progressService.ReportProgress(metadata.ProgressTitle, currentProgress);
@@ -319,6 +326,15 @@ namespace FinalDownloader.Services.Download
                 {
                     errorList.Add($"InvalidOperationException - Download process exited with code {processResult.ExitCode} for URL: {metadata.Url}");
                     throw new InvalidOperationException($"Download process exited with code {processResult.ExitCode} for URL: {metadata.Url}");
+                }
+
+                try
+                {
+                    metadata = _metadataService.UpdateMetadataWithDownloadInfo(metadata, downloadPath);
+                }
+                catch (Exception ex)
+                {
+                    errorList.Add($"Metadata Update Error - An error occurred while updating metadata for URL: {metadata.Url} - Message {ex.Message}");
                 }
 
                 await new MediaMetadataRepository(_dbContextFactory.CreateDbContext()).AddAsync(metadata, cancellationToken);

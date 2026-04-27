@@ -25,7 +25,7 @@ namespace FinalDownloader.Services.Parser
             _argumentSettings = configurationService.ArgumentSettings;
         }
 
-        private YtdlpRawMetadata ParseYtdlpRawMetadata(string output)
+        public YtdlpRawMetadata ParseYtdlpRawMetadata(string output)
         {
             if (string.IsNullOrEmpty(output))
             {
@@ -178,16 +178,28 @@ namespace FinalDownloader.Services.Parser
 
             Match match = _progressRegex.Match(progressString);
 
+            
             if (match.Success)
             {
+                var percentResult = double.TryParse((match.Groups["percent"].Value).Replace("%", ""), out double percent);
+                var downloadedBytesResult = long.TryParse(match.Groups["downloaded_bytes"].Value, out long downloadedBytes);
+                var speed = match.Groups["speed"].Value.Trim();
+                var eta = match.Groups["eta"].Value.Trim();
+                var size = match.Groups["size"].Value.Trim();
+
+                if (!percentResult || !downloadedBytesResult)
+                {
+                    return null;
+                }
+
                 return new DownloadProgress
                 {
                     // Parse the percentage as a double, handle potential culture issues with InvariantCulture
-                    Percent = double.Parse((match.Groups["percent"].Value).Replace("%", "")),
-                    Speed = match.Groups["speed"].Value.Trim(),
-                    EstimatedTimeRemaining = match.Groups["eta"].Value.Trim(),
-                    Size = match.Groups["size"].Value.Trim(),
-                    DownloadedBytes = long.Parse(match.Groups["downloaded_bytes"].Value),
+                    Percent = percent,
+                    Speed = !string.IsNullOrEmpty(speed) ? speed : string.Empty,
+                    EstimatedTimeRemaining = !string.IsNullOrEmpty(eta) ? eta : string.Empty,
+                    Size = !string.IsNullOrEmpty(size) ? size : string.Empty,
+                    DownloadedBytes = downloadedBytes,
                     //TotalBytes = long.Parse(match.Groups["total"].Value),
                     Status = "Downloading"
                 };

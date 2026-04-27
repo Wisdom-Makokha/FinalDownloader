@@ -1,5 +1,7 @@
 ﻿using FinalDownloader.Models.Settings;
 using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,19 +15,12 @@ namespace FinalDownloader.Services.Configuration
     internal class ConfigurationService : IConfigurationService
     {
         public DownloadSettings DownloadSettings { get; private set; }
-        private readonly JsonSerializerOptions _jsonSerializerOptions;
 
         public ArgumentSettings ArgumentSettings { get; private set; }
         private readonly string _configFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "appsettings.json");
 
         public ConfigurationService()
         {
-            _jsonSerializerOptions = new JsonSerializerOptions
-            {
-                WriteIndented = true,
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            };
-
             DownloadSettings = LoadDownloadSettings();
             ArgumentSettings = LoadArgumentSettings();
         }
@@ -36,12 +31,17 @@ namespace FinalDownloader.Services.Configuration
             ArgumentSettings = LoadArgumentSettings();
         }
 
-        private DownloadSettings LoadDownloadSettings()
+        private IConfigurationRoot BuildConfiguration()
         {
-            var config = new ConfigurationBuilder()
+            return new ConfigurationBuilder()
                 .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                 .Build();
+        }
+
+        private DownloadSettings LoadDownloadSettings()
+        {
+            var config = BuildConfiguration();
 
             var settings = config.GetSection("DownloadSettings").Get<DownloadSettings>()
                 ?? throw new ArgumentNullException(nameof(DownloadSettings), "DownloadSettings configuration is missing");
@@ -51,36 +51,64 @@ namespace FinalDownloader.Services.Configuration
 
         private ArgumentSettings LoadArgumentSettings()
         {
-            var config = new ConfigurationBuilder()
-                .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
-                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                .Build();
+            var config = BuildConfiguration();
+
             var settings = config.GetSection("ArgumentSettings").Get<ArgumentSettings>()
                 ?? throw new ArgumentNullException(nameof(ArgumentSettings), "ArgumentSettings configuration is missing");
 
             return settings;
         }
 
+        private async Task<string> ReadConfigFileAsync()
+        {
+            if (!File.Exists(_configFilePath))
+            {
+                throw new FileNotFoundException("Configuration file not found", _configFilePath);
+            }
+            return await File.ReadAllTextAsync(_configFilePath);
+        }
+
         public async Task SaveDownloadSettings(DownloadSettings downloadSettings)
         {
-            var configJson = await File.ReadAllTextAsync(_configFilePath);
-            var configNode = JsonNode.Parse(configJson) ?? throw new ArgumentException("Failed to parse Settings JSON");
+            try
+            {
+                var configJson = await ReadConfigFileAsync();
+                var configObj = JObject.Parse(configJson);
 
-            configNode["DownloadSettings"] = JsonSerializer.SerializeToNode(downloadSettings, _jsonSerializerOptions);
+                configObj["DownloadSettings"] = JObject.FromObject(downloadSettings);
 
-            var updatedConfigJson = configNode.ToJsonString(_jsonSerializerOptions);
-            await File.WriteAllTextAsync(_configFilePath, updatedConfigJson);
+                var updatedConfigJson = configObj.ToString(Formatting.Indented);
+                await File.WriteAllTextAsync(_configFilePath, updatedConfigJson);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                throw new InvalidOperationException("Failed to save DownloadSettings due to insufficient permissions.", ex);
+            }
+            catch (IOException ex)
+            {
+                throw new InvalidOperationException("Failed to save DownloadSettings due to an I/O error.", ex);
+            }
         }
 
         public async Task SaveArgumentSettings(ArgumentSettings argumentSettings)
         {
-            var configJson = await File.ReadAllTextAsync(_configFilePath);
-            var configNode = JsonNode.Parse(configJson) ?? throw new ArgumentException("Failed to parse Settings JSON");
+            try
+            {
+                var configJson = await ReadConfigFileAsync();
+                var configObj = JObject.Parse(configJson);
 
-            configNode["ArgumentSettigns"] = JsonSerializer.SerializeToNode(argumentSettings, _jsonSerializerOptions);
+                configObj["ArgumentSettings"] = JObject.FromObject(argumentSettings);
 
-            var updatedConfigJson = configNode.ToJsonString(_jsonSerializerOptions);
-            await File.WriteAllTextAsync(_configFilePath, updatedConfigJson);
+                var updatedConfigJson = configObj.ToString(Formatting.Indented);
+                await File.WriteAllTextAsync(_configFilePath, updatedConfigJson);
+            }
+            catch (UnauthorizedAccessException ex) {
+                throw new InvalidOperationException("Failed to save ArgumentSettings due to insufficient permissions.", ex);
+            }
+            catch (IOException ex)
+            {
+                throw new InvalidOperationException("Failed to save ArgumentSettings due to an I/O error.", ex);
+            }
         }
     }
 }

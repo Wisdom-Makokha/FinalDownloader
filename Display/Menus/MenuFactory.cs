@@ -49,6 +49,17 @@ namespace FinalDownloader.Display.Menus
                     }
                 ),
                 new MenuOption(
+                    title : "Merge Records",
+                    description: "Go to the records merge screen",
+                    action: (data) => new NavigationResult()
+                    {
+                        NextScreenKey = ScreenNames.RecordsMergeScreen,
+                        ScreenAction = NavigationAction.Push,
+                        Data = null,
+                        MenuScreenCustomizationData = null
+                    }
+                ),
+                new MenuOption(
                     title : "Exit",
                     description: "Exit the application",
                     action: (data) => new NavigationResult()

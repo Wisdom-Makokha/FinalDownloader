@@ -57,8 +57,8 @@ namespace FinalDownloader.Services.Progress
         {
             if (_progressDictionary.TryRemove(mediaTitle, out var task))
             {
-                task.Description = $"[{progress.StatusColor}]{progress.Status} [/]-[cyan] {mediaTitle}[/]\n" +
-                    $"[red]{errorMessage}[/]";
+                task.Description = $"[{progress.StatusColor}]{progress.Status}[/]" +
+                    $"[Fuchsia]{errorMessage}[/]";
                 task.StopTask();
             }
         }
@@ -69,10 +69,10 @@ namespace FinalDownloader.Services.Progress
             {
                 task.Value = progress.Percent;
                 task.Description = $"[{progress.StatusColor}]{progress.Status}[/] - {mediaTitle} " +
-                $"| [grey]Percent: [/][white]{progress.Percent.ToString(),-4}%[/]" +
-                $"| [grey]Speed: [/][white]{progress.Speed,-6}[/]" +
-                $"| [grey]ETA: [/][white]{progress.EstimatedTimeRemaining,-5}[/]" +
-                $"| [grey]Size: [/][white]{progress.DownloadSize,-7}[/]";
+                $"| [grey]Percent: [/][white]{(progress.Percent.ToString() + "%"),-6}[/]" +
+                $"| [grey]Speed: [/][white]{progress.Speed,-12}[/] " +
+                $"| [grey]ETA: [/][white]{progress.EstimatedTimeRemaining,-6}[/]" +
+                $"| [grey]Size: [/][white]{progress.DownloadSize}[/]";
             }
         }
 

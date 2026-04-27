@@ -21,8 +21,8 @@ namespace FinalDownloader.Services.MetadataRetrieval
         private readonly DownloadSettings _downloadSettings;
 
         public MetadataService(
-            IParserService parserService, 
-            IArgumentService argumentService, 
+            IParserService parserService,
+            IArgumentService argumentService,
             IProcessService processService,
             IConfigurationService configurationService)
         {
@@ -51,7 +51,6 @@ namespace FinalDownloader.Services.MetadataRetrieval
                 RedirectErrorFilePath = playlistErrorFP,
                 CreateNewWindow = false
             };
-
 
             var entriesProcess = new ProcessData
             {
@@ -83,9 +82,9 @@ namespace FinalDownloader.Services.MetadataRetrieval
                 var entriesMetadataOutput = await File.ReadAllLinesAsync(entriesFP, cancellationToken);
 
                 var metadata = _parserService.ParseContainerMetadata(
-                    playlistMetadataOutput.First(), 
-                    entriesMetadataOutput.ToList(), 
-                    downloadData.Category, 
+                    playlistMetadataOutput.First(),
+                    entriesMetadataOutput.ToList(),
+                    downloadData.Category,
                     downloadData.Format);
 
                 return metadata;
@@ -132,6 +131,34 @@ namespace FinalDownloader.Services.MetadataRetrieval
             {
                 throw new InvalidOperationException("An error occurred while running the process to get metadata.", ex);
             }
+        }
+
+        public MediaMetadataBase UpdateMetadataWithDownloadInfo(MediaMetadataBase metadata, string downloadPath)
+        {
+            if (metadata == null)
+                throw new ArgumentNullException(nameof(metadata));
+
+            if (string.IsNullOrEmpty(downloadPath))
+                throw new ArgumentException("Download path cannot be null or empty.", nameof(downloadPath));
+
+            var fileInfo = new FileInfo(downloadPath);
+
+            var metadataFile = Path.Combine(downloadPath, $"{metadata.Id}.info.json");
+            var metadataOutput = File.ReadAllLines(metadataFile).FirstOrDefault();
+            if (metadataOutput == null)
+                throw new InvalidOperationException($"Metadata file not found at {metadataFile}.");
+
+            var completeMetadata = _parserService.ParseYtdlpRawMetadata(metadataOutput);
+
+            metadata.Artist = completeMetadata.Artist;
+            metadata.Artists = completeMetadata.Artists != null ? string.Join(", ", completeMetadata.Artists) : null;
+            metadata.Genre = completeMetadata.Genres != null ? string.Join(", ", completeMetadata.Genres) : null;
+            metadata.ReleaseYear = completeMetadata.Release_Year;
+            metadata.UploadDate = completeMetadata.Upload_Date;
+            metadata.DownloadDate = fileInfo.CreationTime;
+            metadata.FileSize = fileInfo.Length;
+
+            return metadata;
         }
     }
 }

@@ -2,6 +2,7 @@
 using ConsoleStackNavigation.NavigationSystem;
 using FinalDownloader.Data.Interface;
 using FinalDownloader.Display.ScreenData;
+using FinalDownloader.Models.MediaMetadata;
 using Spectre.Console;
 using System;
 using System.Collections.Generic;
@@ -39,7 +40,7 @@ namespace FinalDownloader.Display.Screens.Category
 
             AnsiConsole.MarkupLine($"[bold silver underline]Category Details[/]");
             Console.Write("\n\n");
-            
+
             DisplayDetails(category);
 
             Console.Write("\n\n");
@@ -55,13 +56,63 @@ namespace FinalDownloader.Display.Screens.Category
 
         public static void DisplayDetails(Models.Category category)
         {
-            AnsiConsole.MarkupLine($"[bold]Name:[/]             [cyan]{category.Name}[/]");
-            AnsiConsole.MarkupLine($"[bold]Description:[/]      [cyan]{category.Description}[/]");
-            AnsiConsole.MarkupLine($"[bold]Folder Path:[/]      [cyan]{category.FolderPath}[/]");
-            AnsiConsole.MarkupLine($"[bold]Media Type:[/]       [cyan]{category.Type} [/]");
-            AnsiConsole.MarkupLine($"[bold]Resolution:[/]       [cyan]{category.Resolution} [/]");
-            AnsiConsole.MarkupLine($"[bold]Subtitles:[/]        [cyan]{(category.Subtitles ? "Yes" : "No")}[/]");
-            AnsiConsole.MarkupLine($"[bold]Default Category:[/] [cyan]{(category.IsDefault ? "Yes" : "No")} [/]");
+            // Color code based on MediaType
+            var mediaTypeColor = category.Type switch
+            {
+                MediaType.Video => "blue",
+                MediaType.Audio => "green",
+                _ => "grey"
+            };
+
+            var rows = new List<string>
+            {
+                $"[bold cyan]ID:[/] [grey]{category.Id}[/]",
+                $"[bold cyan]Name:[/] [yellow]{EscapeMarkup(category.Name)}[/]",
+                $"[bold cyan]Folder Path:[/] [dim]{EscapeMarkup(category.FolderPath)}[/]",
+                $"[bold cyan]Media Type:[/] [{mediaTypeColor}]{category.Type}[/]",
+                $"[bold cyan]Description:[/] [italic]{EscapeMarkup(category.Description ?? "[grey]N/A[/]")}[/]",
+                $"[bold cyan]Resolution:[/] {(string.IsNullOrEmpty(category.Resolution) ? "[grey]Not specified[/]" : $"[green]{category.Resolution}[/]")}",
+                $"[bold cyan]Subtitles:[/] {(category.Subtitles ? "[green]✓ Enabled[/]" : "[red]✗ Disabled[/]")}",
+                $"[bold cyan]Default Category:[/] {(category.IsDefault ? "[yellow]★ Yes (Default)[/]" : "[grey]No[/]")}"
+            };
+
+            // Add item count with icon
+            var itemCount = category.Items?.Count ?? 0;
+            var itemIcon = category.Type switch
+            {
+                MediaType.Video => "🎬",
+                MediaType.Audio => "🎵",
+                _ => "📄"
+            };
+            rows.Add($"[bold cyan]Items Count:[/] {(itemCount > 0 ? $"[green]{itemIcon} {itemCount} items[/]" : "[grey]0 items[/]")}");
+
+            var content = string.Join("\n", rows);
+
+            // Choose header icon based on MediaType
+            var headerIcon = category.Type switch
+            {
+                MediaType.Video => "🎥",
+                MediaType.Audio => "🎧",
+                _ => "📁"
+            };
+
+            var panel = new Panel(content)
+            {
+                Header = new PanelHeader($"[bold yellow]{headerIcon} Category: {EscapeMarkup(category.Name)}[/]"),
+                Border = BoxBorder.Heavy,
+                BorderStyle = new Style(foreground: Color.Cyan1),
+                Padding = new Padding(2, 1, 2, 1),
+                Expand = true
+            };
+
+            AnsiConsole.Write(panel);
+            AnsiConsole.WriteLine();
+        }
+
+        // Helper method to escape markup characters
+        static string EscapeMarkup(string text)
+        {
+            return text?.Replace("[", "[[").Replace("]", "]]") ?? string.Empty;
         }
     }
 }

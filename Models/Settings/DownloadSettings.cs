@@ -9,7 +9,6 @@ namespace FinalDownloader.Models.Settings
     internal class DownloadSettings
     {
         public string TemporaryDirectory => Path.Combine(Path.GetTempPath(), "FinalDownloaderTempFiles");
-        public bool DirectoryPathSet {  get; set; }
         public bool DeleteTempFiles { get; set; }
         public int MaxConcurrentDownloads { get; set; }
         public List<string> SupportedVideoFormats { get; set; }

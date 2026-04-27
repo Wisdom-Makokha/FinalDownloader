@@ -26,16 +26,16 @@ namespace FinalDownloader.Display.Screens.Settings
 
             AnsiConsole.MarkupLine("[bold silver underline]Argument Settings Details[/]");
             Console.Write("\n\n");
-            
+
             DisplayDetails(_argumentSettings);
 
             Console.Write("\n\n");
-            
+
             await AnsiConsole.PromptAsync(
                 new TextPrompt<string>("[grey]Press [[Enter]] to go back...[/]")
                 .AllowEmpty()
             );
-            
+
             return new NavigationResult
             {
                 ScreenAction = NavigationAction.Pop,
@@ -44,21 +44,64 @@ namespace FinalDownloader.Display.Screens.Settings
                 MenuScreenCustomizationData = null
             };
         }
-        public static void DisplayDetails(ArgumentSettings argumentSettings)
+        public static void DisplayDetails(ArgumentSettings settings)
         {
-            AnsiConsole.MarkupLine($"[bold]Preferred Resolution:[/] [cyan]{argumentSettings.PreferredResolution}[/]");
-            AnsiConsole.MarkupLine($"[bold]Preferred Audio Format:[/] [cyan]{argumentSettings.PreferredAudioFormat}[/]");
-            AnsiConsole.MarkupLine($"[bold]Preferred Video Format:[/] [cyan]{argumentSettings.PreferredVideoFormat}[/]");
-            AnsiConsole.MarkupLine($"[bold]Preferred subtitle Format:[/] [cyan]{argumentSettings.PreferredSubtitleFormat}[/]");
-            AnsiConsole.MarkupLine($"[bold]Audio Only:[/] [cyan]{argumentSettings.AudioOnly}[/]");
-            AnsiConsole.MarkupLine($"[bold]Subtitles:[/] [cyan]{argumentSettings.Subtitles}[/]");
-            AnsiConsole.MarkupLine($"[bold]Embed Metadata:[/] [cyan]{argumentSettings.EmbedMetadata}[/]");
-            AnsiConsole.MarkupLine($"[bold]Embed Subtitles:[/] [cyan]{argumentSettings.EmbedSubtitles}[/]");
-            AnsiConsole.MarkupLine($"[bold]Show Progress:[/] [cyan]{argumentSettings.Progress}[/]");
-            AnsiConsole.MarkupLine($"[bold]Embed Thumbnail:[/] [cyan]{argumentSettings.Thumbnail}[/]");
-            AnsiConsole.MarkupLine($"[bold]Simulate Download:[/] [cyan]{argumentSettings.Simulate}[/]");
-            AnsiConsole.MarkupLine($"[bold]Ignore Errors:[/] [cyan]{argumentSettings.IgnoreErrors}[/]");
-            AnsiConsole.MarkupLine($"[bold]Max Download Retries:[/] [cyan]{argumentSettings.MaxRetries}[/]");
+            // Group settings by category for better organization
+            var formatRows = new List<string>
+            {
+                $"[bold cyan]Preferred Resolution:[/] {(string.IsNullOrEmpty(settings.PreferredResolution) ? "[grey]Not specified[/]" : $"[green]{EscapeMarkup(settings.PreferredResolution)}[/]")}",
+                $"[bold cyan]Preferred Video Format:[/] {(string.IsNullOrEmpty(settings.PreferredVideoFormat) ? "[grey]Not specified[/]" : $"[blue]{EscapeMarkup(settings.PreferredVideoFormat)}[/]")}",
+                $"[bold cyan]Preferred Audio Format:[/] {(string.IsNullOrEmpty(settings.PreferredAudioFormat) ? "[grey]Not specified[/]" : $"[green]{EscapeMarkup(settings.PreferredAudioFormat)}[/]")}",
+                $"[bold cyan]Preferred Subtitle Format:[/] {(string.IsNullOrEmpty(settings.PreferredSubtitleFormat) ? "[grey]Not specified[/]" : $"[magenta]{EscapeMarkup(settings.PreferredSubtitleFormat)}[/]")}"
+            };
+
+            var featureRows = new List<string>
+            {
+                $"[bold cyan]Audio Only Mode:[/] {(settings.AudioOnly ? "[yellow]🎵 Enabled[/]" : "[grey]Disabled[/]")}",
+                $"[bold cyan]Download Subtitles:[/] {(settings.Subtitles ? "[green]✓ Yes[/]" : "[grey]No[/]")}",
+                $"[bold cyan]Embed Metadata:[/] {(settings.EmbedMetadata ? "[green]✓ Yes[/]" : "[grey]No[/]")}",
+                $"[bold cyan]Embed Subtitles:[/] {(settings.EmbedSubtitles ? "[green]✓ Yes[/]" : "[grey]No[/]")}",
+                $"[bold cyan]Download Thumbnail:[/] {(settings.Thumbnail ? "[yellow] Yes[/]" : "[grey]No[/]")}"
+            };
+
+            var behaviorRows = new List<string>
+            {
+                $"[bold cyan]Show Progress:[/] {(settings.Progress ? "[green]✓ Enabled[/]" : "[grey]Disabled[/]")}",
+                $"[bold cyan]Simulation Mode:[/] {(settings.Simulate ? "[yellow]⚠️ Dry Run[/]" : "[grey]Disabled[/]")}",
+                $"[bold cyan]Ignore Errors:[/] {(settings.IgnoreErrors ? "[red]⚠️ Continue on Error[/]" : "[grey]Disabled[/]")}",
+                $"[bold cyan]Max Retries:[/] {(settings.MaxRetries > 0 ? $"[yellow]{settings.MaxRetries}[/]" : "[grey]0 (No retry)[/]")}"
+            };
+
+            // Create sections with headers
+            var content = new List<string>
+            {
+                "[bold underline]Format Preferences:[/]",
+                string.Join("\n", formatRows),
+                "",
+                "[bold underline]Features:[/]",
+                string.Join("\n", featureRows),
+                "",
+                "[bold underline]Runtime Behavior:[/]",
+                string.Join("\n", behaviorRows)
+            };
+
+            var panel = new Panel(string.Join("\n", content))
+            {
+                Header = new PanelHeader("[bold yellow] Argument Settings[/]"),
+                Border = BoxBorder.Heavy,
+                BorderStyle = new Style(foreground: Color.Cyan1),
+                Padding = new Padding(2, 1, 2, 1),
+                Expand = true
+            };
+
+            AnsiConsole.Write(panel);
+            AnsiConsole.WriteLine();
+        }
+
+        // Helper method to escape markup characters
+        static string EscapeMarkup(string text)
+        {
+            return text?.Replace("[", "[[").Replace("]", "]]") ?? string.Empty;
         }
     }
 }

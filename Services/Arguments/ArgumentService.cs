@@ -16,7 +16,7 @@ namespace FinalDownloader.Services.Arguments
             var args = new List<string>
             {
                 "--windows-filename",
-                $"--output \"{temporaryDirectory}\\%(id)s.%(ext)s\"",
+                $"--output \"{temporaryDirectory}\\%(id)s.%(ext)s\""
             };
 
             if (argumentSettings.AudioOnly)
@@ -76,6 +76,10 @@ namespace FinalDownloader.Services.Arguments
             {
                 args.Add("--simulate");
             }
+
+            // this will create a .info.json file for each downloaded video in the same directory as the downloaded video,
+            // which can be used to extract metadata about the video without having to make additional requests to the video platform's API
+            args.Add("--write-info-json");
 
             args.Add($"\"{url}\"");
 

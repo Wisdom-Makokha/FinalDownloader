@@ -3,6 +3,9 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+# Ignore RecordsMerge directory and any files in it, which is used for merging records in the database
+RecordsMerge/
+
 # User-specific files
 *.rsuser
 *.suo
