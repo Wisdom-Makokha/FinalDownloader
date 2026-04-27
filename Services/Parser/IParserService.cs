@@ -1,6 +1,6 @@
 ﻿using FinalDownloader.Models;
 using FinalDownloader.Models.MediaMetadata;
-using FinalDownloader.Services.Download;
+using FinalDownloader.Services.Progress;
 using System;
 using System.Collections.Generic;
 using System.Linq;

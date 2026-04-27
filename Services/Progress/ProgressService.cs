@@ -1,5 +1,4 @@
-﻿using FinalDownloader.Services.Download;
-using Microsoft.EntityFrameworkCore.Metadata;
+﻿using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Spectre.Console;
 using System;
@@ -22,7 +21,12 @@ namespace FinalDownloader.Services.Progress
             .Columns(new ProgressColumn[]
             {
                 new TaskDescriptionColumn(),
-                new SpinnerColumn(),
+                new ProgressBarColumn(),
+                new PercentageColumn(),
+                new TransferSpeedColumn(),
+                new DownloadedColumn(),
+                new RemainingTimeColumn(), 
+                //new SpinnerColumn(),
             })
             .HideCompleted(false)
             .StartAsync(async context =>
@@ -39,7 +43,7 @@ namespace FinalDownloader.Services.Progress
                 throw new InvalidOperationException("Progress context is not initialized. Ensure InitializeProgressTrackerAsync has been called.");
             }
 
-            var task = _progressContext.AddTask(mediaTitle, maxValue: 100);
+            var task = _progressContext.AddTask(mediaTitle);
             _progressDictionary[mediaTitle] = task;
         }
 
@@ -47,7 +51,7 @@ namespace FinalDownloader.Services.Progress
         {
             if (_progressDictionary.TryRemove(mediaTitle, out var task))
             {
-                task.Value = 100;
+                task.Value = progress.TotalBytes;
                 task.Description = $"[{progress.StatusColor}]{progress.Status} [/]-[cyan] {mediaTitle}[/]";
                 task.StopTask();
             }
@@ -67,12 +71,10 @@ namespace FinalDownloader.Services.Progress
         {
             if (_progressDictionary.TryGetValue(mediaTitle, out var task))
             {
-                task.Value = progress.Percent;
-                task.Description = $"[{progress.StatusColor}]{progress.Status}[/] - {mediaTitle} " +
-                $"| [grey]Percent: [/][white]{(progress.Percent.ToString() + "%"),-6}[/]" +
-                $"| [grey]Speed: [/][white]{progress.Speed,-12}[/] " +
-                $"| [grey]ETA: [/][white]{progress.EstimatedTimeRemaining,-6}[/]" +
-                $"| [grey]Size: [/][white]{progress.DownloadSize}[/]";
+                task.Value = progress.DownloadedBytes;
+                task.MaxValue = progress.TotalBytes;
+
+                task.Description = $"[{progress.StatusColor}]{progress.Status}[/] - {mediaTitle} ";
             }
         }
 

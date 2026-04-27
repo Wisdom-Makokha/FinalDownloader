@@ -281,8 +281,12 @@ namespace FinalDownloader.Services.Download
             var downloadPath = Path.Combine(_downloadSettings.TemporaryDirectory, metadata.Id);
             Directory.CreateDirectory(downloadPath);
 
-            var outputCheck = new StreamWriter(Path.Combine(downloadPath, "progressoutput.txt"), append: true);
-            var lineChecker = new StreamWriter(Path.Combine(downloadPath, "progressline.txt"), append: true);
+            StreamWriter? outputCheck = _downloadSettings.PrintProgress
+                ? new StreamWriter(Path.Combine(downloadPath, "progressoutput.txt"), append: true)
+                : null;
+            StreamWriter? lineChecker = _downloadSettings.PrintProgress
+                ? new StreamWriter(Path.Combine(downloadPath, "progressline.txt"), append: true)
+                : null;
 
             try
             {
@@ -295,12 +299,17 @@ namespace FinalDownloader.Services.Download
                         {
                             _progressService.ReportProgress(metadata.ProgressTitle, currentProgress);
 
-                            outputCheck.WriteLine($"%:{currentProgress.Percent}|" +
-                                $"sp:{currentProgress.Speed}|" +
-                                $"eta:{currentProgress.EstimatedTimeRemaining}|" +
-                                $"db:{currentProgress.DownloadedBytes}|");
-                            //$"tb:{currentProgress.TotalBytes}");
-                            lineChecker.WriteLine(line);
+                            if (outputCheck != null)
+                            {
+                                outputCheck.WriteLine(
+                                    $"db:{currentProgress.DownloadedBytes}|" +
+                                    $"tb:{currentProgress.TotalBytes}");
+                            }
+
+                            if (lineChecker != null)
+                            {
+                                lineChecker.WriteLine(line);
+                            }
                         }
                     }
                 });
@@ -345,7 +354,7 @@ namespace FinalDownloader.Services.Download
                     new DownloadProgress
                     {
                         Status = "Completed",
-                        Speed = string.Empty,
+                        //Speed = string.Empty,
                         IsCompleted = true
                     });
 
@@ -363,15 +372,21 @@ namespace FinalDownloader.Services.Download
                     new DownloadProgress
                     {
                         Status = "Failed",
-                        Speed = string.Empty,
+                        //Speed = string.Empty,
                         IsCompleted = true
                     });
                 return false;
             }
             finally
             {
-                outputCheck.Close();
-                lineChecker.Close();
+                if (outputCheck != null)
+                {
+                    outputCheck.Close();
+                }
+                if (lineChecker != null)
+                {
+                    lineChecker.Close();
+                }
             }
         }
         #endregion

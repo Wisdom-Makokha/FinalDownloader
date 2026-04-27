@@ -52,6 +52,7 @@ namespace FinalDownloader.Display.Screens.Settings
             // Temporary Directory
             rows.Add($"[bold cyan]Temporary Directory:[/] [dim]{EscapeMarkup(settings.TemporaryDirectory)}[/]");
             rows.Add($"[bold cyan]Delete Temp Files:[/] {(settings.DeleteTempFiles ? "[green]✓ Yes (Clean up after completion)[/]" : "[yellow]⚠️ No (Keep temp files)[/]")}");
+            rows.Add($"[bold cyan]Print Progress:[/] {(settings.PrintProgress ? "[green]✓ Yes (Prints progress data to temp files)[/]" : "[yellow]⚠️ No (No progress data printed)[/]")}");
             rows.Add($"[bold cyan]Max Concurrent Downloads:[/] {(settings.MaxConcurrentDownloads > 1 ? $"[yellow]{settings.MaxConcurrentDownloads}[/]" : $"[grey]{settings.MaxConcurrentDownloads}[/]")}");
 
             // Supported Video Formats

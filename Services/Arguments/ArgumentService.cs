@@ -9,7 +9,8 @@ namespace FinalDownloader.Services.Arguments
 {
     internal class ArgumentService : IArgumentService
     {
-        private string _progressTemplate = "\"[PROGRESS] %(progress._percent_str)s | %(progress._speed_str)s | %(progress._eta_str)s | %(progress.downloaded_bytes)s\"";
+        //private string _progressTemplate = "\"[PROGRESS] %(progress._percent_str)s | %(progress._speed_str)s | %(progress._eta_str)s | %(progress.downloaded_bytes)s | %(progress.total_bytes)s\"";
+        private string _progressTemplate = "\"[PROGRESS] %(progress.downloaded_bytes)s | %(progress.total_bytes)s\"";
 
         public string GetDownloadArguments(string temporaryDirectory, string url, ArgumentSettings argumentSettings)
         {

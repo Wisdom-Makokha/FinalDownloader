@@ -11,6 +11,7 @@ namespace FinalDownloader.Models.Settings
         public string TemporaryDirectory => Path.Combine(Path.GetTempPath(), "FinalDownloaderTempFiles");
         public bool DeleteTempFiles { get; set; }
         public int MaxConcurrentDownloads { get; set; }
+        public bool PrintProgress { get; set; }
         public List<string> SupportedVideoFormats { get; set; }
         public List<string> SupportedAudioFormats { get; set; }
         public List<string> SupportedResolutions { get; set; }

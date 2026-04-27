@@ -123,8 +123,12 @@ namespace FinalDownloader.Display.Screens.Download
                 }
             }
 
+            await _categoryRepository.SetDefaultCategoryAsync(category!.Name, cts.Token);
+            category.IsDefault = true;
+
             Console.Write("\n");
-            AnsiConsole.MarkupLine($"Selected category: [green]{category!.Name}[/]");
+            AnsiConsole.MarkupLine($"Selected category: [green]{category.Name}[/]");
+
             CategoryDetailsScreen.DisplayDetails(category!);
 
             Console.Write("\n");
@@ -144,7 +148,7 @@ namespace FinalDownloader.Display.Screens.Download
             }
 
             await AnsiConsole.PromptAsync(
-                new TextPrompt<string>("[grey]Press [[Enter]] to go back...[/]")
+                new TextPrompt<string>("[grey]Press [[Enter]] to go continue...[/]")
                 .AllowEmpty()
             );
 

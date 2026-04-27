@@ -2,7 +2,7 @@
 using FinalDownloader.Models.MediaMetadata;
 using FinalDownloader.Models.Settings;
 using FinalDownloader.Services.Configuration;
-using FinalDownloader.Services.Download;
+using FinalDownloader.Services.Progress;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,15 +16,13 @@ namespace FinalDownloader.Services.Parser
     internal class ParserService : IParserService
     {
         private readonly ArgumentSettings _argumentSettings;
-        private readonly Regex _progressRegex = new Regex
-                ("^\\[PROGRESS\\]\\s+(?<percent>[^\\s|]+(?:\\s*%)?)\\s*\\|\\s*(?<speed>[^\\s|]+(?:\\s*[KMGT]?B\\s)?)\\s*\\|\\s*(?<eta>(?:\\d{1,2}:)?\\d{1,2}:\\d{2}(?:\\.\\d+)?)\\s*\\|\\s*(?<downloaded_bytes>[\\d.]+(?:\\s*[KMGT]?B)?)",
-                RegexOptions.Compiled);
-
+        
         public ParserService(IConfigurationService configurationService)
         {
             _argumentSettings = configurationService.ArgumentSettings;
         }
 
+        #region Metadata Parsing
         public YtdlpRawMetadata ParseYtdlpRawMetadata(string output)
         {
             if (string.IsNullOrEmpty(output))
@@ -170,6 +168,12 @@ namespace FinalDownloader.Services.Parser
                 throw new InvalidOperationException("An unexpected error occurred while parsing container metadata.", ex);
             }
         }
+        #endregion
+
+        #region Progress Parsing
+        private readonly Regex _progressRegex = new Regex
+                ("^\\[PROGRESS\\]\\s+(?<downloaded_bytes>[\\d.]+(?:\\s*[KMGT]?B)?)\\s*\\|\\s*(?<total_bytes>[\\d.]+(?:\\s*[KMGT]?B)?)",
+                RegexOptions.Compiled);
 
         public DownloadProgress? ParseProgressString(string progressString)
         {
@@ -178,34 +182,27 @@ namespace FinalDownloader.Services.Parser
 
             Match match = _progressRegex.Match(progressString);
 
-            
+
             if (match.Success)
             {
-                var percentResult = double.TryParse((match.Groups["percent"].Value).Replace("%", ""), out double percent);
                 var downloadedBytesResult = long.TryParse(match.Groups["downloaded_bytes"].Value, out long downloadedBytes);
-                var speed = match.Groups["speed"].Value.Trim();
-                var eta = match.Groups["eta"].Value.Trim();
-                var size = match.Groups["size"].Value.Trim();
+                var totalBytesResult = long.TryParse(match.Groups["total_bytes"].Value, out long totalBytes);
 
-                if (!percentResult || !downloadedBytesResult)
+                if (!downloadedBytesResult || !totalBytesResult)
                 {
                     return null;
                 }
 
                 return new DownloadProgress
                 {
-                    // Parse the percentage as a double, handle potential culture issues with InvariantCulture
-                    Percent = percent,
-                    Speed = !string.IsNullOrEmpty(speed) ? speed : string.Empty,
-                    EstimatedTimeRemaining = !string.IsNullOrEmpty(eta) ? eta : string.Empty,
-                    Size = !string.IsNullOrEmpty(size) ? size : string.Empty,
-                    DownloadedBytes = downloadedBytes,
-                    //TotalBytes = long.Parse(match.Groups["total"].Value),
+                    TotalBytes = totalBytesResult ? totalBytes : 0,
+                    DownloadedBytes = downloadedBytesResult ? downloadedBytes : 0,
                     Status = "Downloading"
                 };
             }
 
             return null;
         }
+        #endregion
     }
 }
