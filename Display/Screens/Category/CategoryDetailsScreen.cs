@@ -45,7 +45,8 @@ namespace FinalDownloader.Display.Screens.Category
 
             Console.Write("\n\n");
 
-            await AnsiConsole.PromptAsync(new TextPrompt<string>("Press [green]Enter[/] to go back...").AllowEmpty());
+            ScreenUtility.PauseScreen("Press [green]Enter[/] to go back...");
+
             return new NavigationResult
             {
                 ScreenAction = NavigationAction.Pop,

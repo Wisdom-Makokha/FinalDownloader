@@ -34,12 +34,10 @@ namespace FinalDownloader.Display.Screens
                 Padding = new Padding(1, 1),
             };
             AnsiConsole.Write(panel);
-            //Task.Delay(DelayTime).Wait();
+            await Task.Delay(100);
 
             Console.Write("\n\n");
-            var pause = await AnsiConsole.PromptAsync(
-                new TextPrompt<string>("Press [green]Enter[/] to continue...")
-                        .AllowEmpty());
+            ScreenUtility.PauseScreen();
 
             return new NavigationResult
             {

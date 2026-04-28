@@ -1,4 +1,5 @@
-﻿using FinalDownloader.Constants;
+﻿using DocumentFormat.OpenXml.Spreadsheet;
+using FinalDownloader.Constants;
 using FinalDownloader.Data;
 using FinalDownloader.Data.Interface;
 using FinalDownloader.Data.Repository;
@@ -113,7 +114,7 @@ namespace FinalDownloader.Services.Download
 
             try
             {
-                AnsiConsole.MarkupLine($"[green]Starting downloads...[/]");
+                //AnsiConsole.MarkupLine($"[green]Starting downloads...[/]");
 
                 // for when downloads are less than the max degree of parallelism
                 if (_downloadQueue.Count <= _downloadSettings.MaxConcurrentDownloads)
@@ -121,8 +122,16 @@ namespace FinalDownloader.Services.Download
                     var downloads = DequeueDownloads().Select(async item =>
                     {
                         bool success = await DownloadAsync(item, argumentSettings, cancellationToken);
+                        var statement = success
+                                    ? $"[green]✓ Successfully downloaded:[/] [blue]{item.Title.EscapeMarkup()}[/]"
+                                    : $"[red]✗ Failed to download:[/] [blue]{item.Title.EscapeMarkup()}[/]";
+                        AnsiConsole.Markup(statement);
+
                         if (success)
+                        {
                             await _fileHandlingService.MoveDownloadToDestination(item);
+                            AnsiConsole.Markup("[orange1] - Moved[/]\n");
+                        }
                     });
 
                     await Task.WhenAll(downloads);
@@ -134,12 +143,21 @@ namespace FinalDownloader.Services.Download
                         try
                         {
                             bool success = await DownloadAsync(metadata, argumentSettings, ct);
+                            var statement = success
+                                    ? $"[green]✓ Successfully downloaded:[/] [blue]{metadata.Title.EscapeMarkup()}[/]"
+                                    : $"[red]✗ Failed to download:[/] [blue]{metadata.Title.EscapeMarkup()}[/]";
+                            AnsiConsole.Markup(statement);
 
                             if (success)
+                            {
                                 await _fileHandlingService.MoveDownloadToDestination(metadata);
+                                AnsiConsole.Markup("[orange1] - Moved[/]\n");
+                            }
                         }
                         catch
-                        { }
+                        {
+                            AnsiConsole.MarkupLine($"[red]✗ Failed to download or move:[/] [blue]{metadata.Title.EscapeMarkup()}[/]");
+                        }
                     });
                 }
             }
@@ -158,7 +176,7 @@ namespace FinalDownloader.Services.Download
             ProcessingComplete = false;
             try
             {
-                AnsiConsole.MarkupLine($"[green]Starting downloads with progress tracking...[/]");
+                //AnsiConsole.MarkupLine($"[green]Starting downloads with progress tracking...[/]");
                 await _progressService.InitializeProgressTrackerAsync(async context =>
                 {
                     var tasks = new List<Task>();
@@ -178,11 +196,21 @@ namespace FinalDownloader.Services.Download
                             try
                             {
                                 bool success = await DownloadWithProgressAsync(metadata, argumentSettings, cancellationToken);
+                                var statement = success
+                                    ? $"[green]✓ Successfully downloaded:[/] [blue]{metadata.Title.EscapeMarkup()}[/]"
+                                    : $"[red]✗ Failed to download:[/] [blue]{metadata.Title.EscapeMarkup()}[/]";
+                                AnsiConsole.Markup(statement);
+
                                 if (success)
+                                {
                                     await _fileHandlingService.MoveDownloadToDestination(metadata);
+                                    AnsiConsole.Markup(" - [orange1]Moved[/]\n");
+                                }
                             }
-                            catch
-                            { }
+                            catch //(Exception ex)
+                            {
+                                AnsiConsole.MarkupLine($"[red]✗ Failed to download or move:[/] [blue]{metadata.Title.EscapeMarkup()}[/]");
+                            }
                             finally
                             {
                                 throttler.Release();

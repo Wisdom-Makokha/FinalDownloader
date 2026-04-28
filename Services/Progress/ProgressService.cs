@@ -26,9 +26,8 @@ namespace FinalDownloader.Services.Progress
                 new TransferSpeedColumn(),
                 new DownloadedColumn(),
                 new RemainingTimeColumn(), 
-                //new SpinnerColumn(),
             })
-            .HideCompleted(false)
+            .HideCompleted(true)
             .StartAsync(async context =>
             {
                 _progressContext = context;

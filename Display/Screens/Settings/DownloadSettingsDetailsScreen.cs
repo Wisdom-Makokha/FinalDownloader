@@ -31,10 +31,8 @@ namespace FinalDownloader.Display.Screens.Settings
             
             Console.Write("\n\n");
 
-            await AnsiConsole.PromptAsync(
-                new TextPrompt<string>("[grey]Press [[Enter]] to go back...[/]")
-                .AllowEmpty()
-            );
+            await Task.Delay(100); // Small delay to ensure the UI updates before pausing
+            ScreenUtility.PauseScreen();
 
             return new NavigationResult
             {

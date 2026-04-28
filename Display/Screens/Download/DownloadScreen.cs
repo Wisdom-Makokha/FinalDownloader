@@ -47,6 +47,8 @@ namespace FinalDownloader.Display.Screens.Download
         {
             Console.Clear();
 
+            AnsiConsole.MarkupLine("[bold underline cyan]Set Download Details[/]\n");
+
             var downloadData = new DownloadData();
             var downloadList = new List<MediaMetadataBase>();
             using var cts = new CancellationTokenSource();
@@ -131,7 +133,7 @@ namespace FinalDownloader.Display.Screens.Download
 
             CategoryDetailsScreen.DisplayDetails(category!);
 
-            Console.Write("\n");
+            //Console.Write("\n");
 
             ApplyCategorySettings(category!, downloadData);
 
@@ -147,12 +149,10 @@ namespace FinalDownloader.Display.Screens.Download
                 downloadList.Add(await HandleSingleMediaAsync(downloadData, cts.Token));
             }
 
-            await AnsiConsole.PromptAsync(
-                new TextPrompt<string>("[grey]Press [[Enter]] to go continue...[/]")
-                .AllowEmpty()
-            );
+            ScreenUtility.PauseScreen("Metadata retrieved. Press [Enter] to start downloading...");
 
             Console.Clear();
+            AnsiConsole.MarkupLine("[bold underline cyan]Download Summary & Process[/]\n");
             Console.Write("\n");
             DownloadData.DisplayDownloadData(downloadData);
             Console.Write("\n");
@@ -170,10 +170,7 @@ namespace FinalDownloader.Display.Screens.Download
                 });
             }
 
-            await AnsiConsole.PromptAsync(
-                new TextPrompt<string>("[grey]Press [[Enter]] to go back...[/]")
-                .AllowEmpty()
-            );
+            ScreenUtility.PauseScreen("Downloads completed. Press [Enter] to return to the main menu...");
 
             return new NavigationResult
             {

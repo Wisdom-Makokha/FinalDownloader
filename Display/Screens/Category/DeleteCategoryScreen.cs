@@ -37,7 +37,7 @@ namespace FinalDownloader.Display.Screens.Category
                 AnsiConsole.MarkupLine($"[yellow]Deletion of category '{data.Name}' has been cancelled.[/]");
             }
 
-            await AnsiConsole.PromptAsync(new TextPrompt<string>("Press [green]Enter[/] to go back...").AllowEmpty());
+            ScreenUtility.PauseScreen();
 
             return new NavigationResult
             {
